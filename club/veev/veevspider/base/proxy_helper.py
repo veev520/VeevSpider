@@ -3,12 +3,16 @@
 代理帮助模块
 """
 
+import threading
+
 import pymysql
 import requests
-import threading
-import header_helper as header
-from lxml import etree
 from bs4 import BeautifulSoup
+from lxml import etree
+import log
+import time
+
+from base import header_helper as header
 
 test_url = ['https://www.lianjia.com']
 
@@ -110,12 +114,19 @@ class ProxySpider:
         pass
 
     def start(self):
+        thread_list = []
+        print('==========  开始爬  ==========')
         # 爬
-        # self.get_xi_ci()
-        # self.get_data_5u()
-        self.get_ip_181()
+        thread_list.append(threading.Thread(target=self.get_xi_ci()))
+        thread_list.append(threading.Thread(target=self.get_data_5u()))
+        thread_list.append(threading.Thread(target=self.get_ip_181()))
 
+        for t in thread_list:
+            t.start()
+        for t in thread_list:
+            t.join()
         # 校验
+        print('==========  准备校验  ==========')
         self.__check()
         pass
 
@@ -128,16 +139,19 @@ class ProxySpider:
                     )
         __count = 0
         for url in url_list:
-            r = requests.get(url=url, headers=header.get_header())
-            if r.status_code == 200:
-                soup = BeautifulSoup(r.text, "lxml")
-                odd = soup.find_all('tr', {'class': 'odd'})
-                for o in odd:
-                    ts = o.find_all('td')
-                    proxy = (ts[1].text, ts[2].text)
-                    _quene_proxy.append(proxy)
-                    __count += 1
-        print('------- 西刺爬取完成, 共计 %d 条 -------' % __count)
+            try:
+                r = requests.get(url=url, headers=header.get_header())
+                if r.status_code == 200:
+                    soup = BeautifulSoup(r.text, "lxml")
+                    odd = soup.find_all('tr', {'class': 'odd'})
+                    for o in odd:
+                        ts = o.find_all('td')
+                        proxy = (ts[1].text, ts[2].text)
+                        _quene_proxy.append(proxy)
+                        __count += 1
+            except Exception as e:
+                pass
+        print('-- 西刺爬取完成, 共计 %d 条 --' % __count)
         pass
 
     def get_data_5u(self):
@@ -149,15 +163,19 @@ class ProxySpider:
                     )
         __count = 0
         for url in url_list:
-            r = requests.get(url=url, headers=header.get_header())
-            if r.status_code == 200:
-                tree = etree.HTML(r.text)
-                ul_list = tree.xpath('//ul[@class="l2"]')
-                for ul in ul_list:
-                    proxy = (ul.xpath('.//li/text()')[0], ul.xpath('.//li/text()')[1])
-                    _quene_proxy.append(proxy)
-                    __count += 1
-        print('------- 无忧爬取完成, 共计 %d 条 -------' % __count)
+            try:
+                r = requests.get(url=url, headers=header.get_header())
+                print('5u', r.status_code)
+                if r.status_code == 200:
+                    tree = etree.HTML(r.text)
+                    ul_list = tree.xpath('//ul[@class="l2"]')
+                    for ul in ul_list:
+                        proxy = (ul.xpath('.//li/text()')[0], ul.xpath('.//li/text()')[1])
+                        _quene_proxy.append(proxy)
+                        __count += 1
+            except Exception as e:
+                pass
+        print('-- 无忧爬取完成, 共计 %d 条 --' % __count)
 
     def get_ip_181(self):
         """
@@ -165,20 +183,25 @@ class ProxySpider:
         """
         url = 'http://www.ip181.com/'
         __count = 0
-        r = requests.get(url=url, headers=header.get_header())
-        if r.status_code == 200:
-            tree = etree.HTML(r.text)
-            tr_list = tree.xpath('//tr')[1:]
-            for tr in tr_list:
-                proxy = (tr.xpath('./td/text()')[0], tr.xpath('./td/text()')[1])
-                _quene_proxy.append(proxy)
-                __count += 1
-        print('------- ip181爬取完成, 共计 %d 条 -------' % __count)
+        try:
+            r = requests.get(url=url, headers=header.get_header())
+            print('181', r.status_code)
+            if r.status_code == 200:
+                tree = etree.HTML(r.text)
+                tr_list = tree.xpath('//tr')[1:]
+                for tr in tr_list:
+                    proxy = (tr.xpath('./td/text()')[0], tr.xpath('./td/text()')[1])
+                    _quene_proxy.append(proxy)
+                    __count += 1
+        except Exception as e:
+            pass
+        print('-- ip181爬取完成, 共计 %d 条 --' % __count)
 
     def __check(self):
         while _quene_proxy:
-            while len(threading.enumerate()) < 64:
+            while len(threading.enumerate()) < 128:
                 _Checker(_quene_proxy.pop(0)).start()
+        print('==========  校验完毕  ==========')
         pass
 
     pass
@@ -208,6 +231,7 @@ class _Checker(threading.Thread):
                     _lock_storage.acquire()
                     try:
                         _ps.put(self.p[0], self.p[1], url)
+                        pass
                     finally:
                         # 释放锁:
                         _lock_storage.release()
@@ -217,5 +241,6 @@ class _Checker(threading.Thread):
 
 if __name__ == '__main__':
     spider = ProxySpider()
-    spider.start()
+    # spider.start()
+    log.i('ni', 'hao')
     pass
