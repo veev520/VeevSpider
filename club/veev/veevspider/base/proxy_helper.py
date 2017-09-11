@@ -14,7 +14,7 @@ import time
 
 from base import header_helper as header
 
-test_url = ['https://www.lianjia.com']
+test_url = ['https://m.lianjia.com']
 
 
 def get(site='default'):
@@ -61,7 +61,7 @@ class _ProxyStorage:
             # 获取所有记录列表
             results = self.__cursor.fetchall()
         except Exception as e:
-            print('查询数据异常', e)
+            log.i('查询数据异常', e)
         finally:
             return results
 
@@ -76,7 +76,7 @@ class _ProxyStorage:
             # 提交到数据库执行
             self.__db.commit()
         except Exception as e:
-            print('插入数据异常', e)
+            log.i('插入数据异常', e)
             self.__db.rollback()
 
     def __delete_item(self, id):
@@ -87,7 +87,7 @@ class _ProxyStorage:
             self.__cursor.execute(sql)
             self.__db.commit()
         except Exception as e:
-            print('删除数据异常', e)
+            log.i('删除数据异常', e)
             self.__db.rollback()
 
     def __close(self):
@@ -115,7 +115,7 @@ class ProxySpider:
 
     def start(self):
         thread_list = []
-        print('==========  开始爬  ==========')
+        log.i('==========  开始爬  ==========')
         # 爬
         thread_list.append(threading.Thread(target=self.get_xi_ci()))
         thread_list.append(threading.Thread(target=self.get_data_5u()))
@@ -126,7 +126,7 @@ class ProxySpider:
         for t in thread_list:
             t.join()
         # 校验
-        print('==========  准备校验  ==========')
+        log.i('==========  准备校验  ==========')
         self.__check()
         pass
 
@@ -140,7 +140,7 @@ class ProxySpider:
         __count = 0
         for url in url_list:
             try:
-                r = requests.get(url=url, headers=header.get_header())
+                r = requests.get(url=url, headers=header.pc())
                 if r.status_code == 200:
                     soup = BeautifulSoup(r.text, "lxml")
                     odd = soup.find_all('tr', {'class': 'odd'})
@@ -151,7 +151,7 @@ class ProxySpider:
                         __count += 1
             except Exception as e:
                 pass
-        print('-- 西刺爬取完成, 共计 %d 条 --' % __count)
+        log.i('-- 西刺爬取完成, 共计 %d 条 --' % __count)
         pass
 
     def get_data_5u(self):
@@ -164,8 +164,8 @@ class ProxySpider:
         __count = 0
         for url in url_list:
             try:
-                r = requests.get(url=url, headers=header.get_header())
-                print('5u', r.status_code)
+                r = requests.get(url=url, headers=header.pc())
+                log.i('5u', r.status_code)
                 if r.status_code == 200:
                     tree = etree.HTML(r.text)
                     ul_list = tree.xpath('//ul[@class="l2"]')
@@ -175,7 +175,7 @@ class ProxySpider:
                         __count += 1
             except Exception as e:
                 pass
-        print('-- 无忧爬取完成, 共计 %d 条 --' % __count)
+        log.i('-- 无忧爬取完成, 共计 %d 条 --' % __count)
 
     def get_ip_181(self):
         """
@@ -184,8 +184,8 @@ class ProxySpider:
         url = 'http://www.ip181.com/'
         __count = 0
         try:
-            r = requests.get(url=url, headers=header.get_header())
-            print('181', r.status_code)
+            r = requests.get(url=url, headers=header.pc())
+            log.i('181', r.status_code)
             if r.status_code == 200:
                 tree = etree.HTML(r.text)
                 tr_list = tree.xpath('//tr')[1:]
@@ -195,13 +195,13 @@ class ProxySpider:
                     __count += 1
         except Exception as e:
             pass
-        print('-- ip181爬取完成, 共计 %d 条 --' % __count)
+        log.i('-- ip181爬取完成, 共计 %d 条 --' % __count)
 
     def __check(self):
         while _quene_proxy:
             while len(threading.enumerate()) < 128:
                 _Checker(_quene_proxy.pop(0)).start()
-        print('==========  校验完毕  ==========')
+        log.i('==========  校验完毕  ==========')
         pass
 
     pass
@@ -222,11 +222,11 @@ class _Checker(threading.Thread):
                  "https": "https://{}:{}".format(self.p[0], self.p[1])}
             for url in test_url:
                 r = requests.get(url=url,
-                                 headers=header.get_header(),
+                                 headers=header.pc(),
                                  timeout=20,
                                  proxies=p)
                 if r.status_code == 200:
-                    print('代理测试通过: ', self.p)
+                    log.i('代理测试通过: ', self.p)
                     # 获取锁:
                     _lock_storage.acquire()
                     try:
@@ -236,11 +236,11 @@ class _Checker(threading.Thread):
                         # 释放锁:
                         _lock_storage.release()
         except BaseException as e:
-            print('代理测试失败, 异常 ---> ', self.p, e)
+            log.i('代理测试失败, 异常 ---> ', self.p, e)
 
 
 if __name__ == '__main__':
     spider = ProxySpider()
     # spider.start()
-    log.i('ni', 'hao')
+    log.i(49)
     pass

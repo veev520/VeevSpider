@@ -40,7 +40,7 @@ logger = None
 # Define log color
 LOG_COLORS = {
     'DEBUG': '\033[1;34;0m',
-    'INFO': '\033[1;32;0m',
+    'INFO': '\033[0;36;0m',
     'WARNING': '\033[1;33;0m',
     'ERROR': '\033[1;31;0m',
     'CRITICAL': '\033[1;35;0m',
@@ -67,31 +67,35 @@ def add_file_handler(fmt):
     if os.path.isdir(logs_directory) is not True:
         os.mkdir(logs_directory)
     file_name = logs_directory + os.sep + time.strftime("%Y-%m-%d", time.localtime()) + '.log'
-    file_handler = logging.FileHandler(file_name)
-    file_handler.setFormatter(fmt)  # 可以通过setFormatter指定输出格式
+
+    handler = logging.FileHandler(file_name)
+    handler.formatter = logging.Formatter(fmt)
+
     # 为logger添加的日志处理器
-    logger.addHandler(file_handler)
+    logger.addHandler(handler)
 
 
 def add_console_handler(fmt):
     # 控制台日志
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.formatter = ColoredFormatter(fmt)  # 也可以直接给formatter赋值
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(ColoredFormatter(fmt))  # 也可以直接给formatter赋值
     # 为logger添加的日志处理器
-    logger.addHandler(console_handler)
+    logger.addHandler(handler)
 
 
 def init_logger():
     global logger
     # 获取logger实例，如果参数为空则返回root logger
-    logger = logging.getLogger("veev")
-    # 指定logger输出格式
-    fmt = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s')
-    # 为logger添加的日志处理器
-    add_file_handler(fmt)
-    add_console_handler(fmt)
+    logger = logging.getLogger("VeevSpider")
     # 指定日志的最低输出级别，默认为WARN级别
     logger.setLevel(logging.INFO)
+
+    # 指定logger输出格式
+    fmt = '%(asctime)s %(levelname)-4s: %(message)s'
+    # 为logger添加的日志处理器
+    # add_file_handler(fmt)   # 暂不输出到文件
+    add_console_handler(fmt)
     pass
 
 
@@ -104,10 +108,10 @@ def i(*args):
 init_logger()
 
 if __name__ == '__main__':
-    logger.info('777')
-    # a = []
-    # a.append(0)
-    # a.append('1')
-    # a.append(logger)
-    # i('1', 2, a)
+    i('Hello', 'World')
+    a = list()
+    a.append(0)
+    a.append('1')
+    a.append(logger)
+    i('1', 2, a)
 

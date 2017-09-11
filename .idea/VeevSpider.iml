@@ -4,8 +4,9 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/club/veev/veevspider" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/club/veev/veevspider/base" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/club/veev/veevspider/lianjia" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.6.1 (D:\Program Files\Python\Python36\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
